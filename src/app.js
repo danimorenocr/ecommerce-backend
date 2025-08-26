@@ -8,6 +8,7 @@ import cartRoutes from "./routes/cartRoutes.js"
 import cartItemRoutes from "./routes/cartItemRoutes.js"
 import orderRoutes from "./routes/orderRoutes.js"
 import orderItemRoutes from "./routes/orderItemRoutes.js"
+import paymentRoutes from "./routes/paymentRoutes.js"
 
 const app = express()
 const PORT = process.env.PORT || 4000
@@ -40,6 +41,7 @@ app.use("/carts", cartRoutes)
 app.use("/cart-items", cartItemRoutes)
 app.use("/orders", orderRoutes)
 app.use("/order-items", orderItemRoutes)
+app.use("/payments", paymentRoutes);
 
 // Server
 app.listen(PORT, () => {
