@@ -1,5 +1,11 @@
 import prisma from '../config/prisma.js'
 import { Prisma } from '@prisma/client'
+import bcrypt from 'bcryptjs'
+import jwt from 'jsonwebtoken'
+import dotenv from 'dotenv'
+
+dotenv.config()
+
 
 // Get all users
 export const getUsers = async (req, res) => {
@@ -48,8 +54,17 @@ export const createUser = async (req, res) => {
             return res.status(400).json({ error: 'Name, email and password are required' })
         }
 
+        // Hashear la contraseña antes de guardarla
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
         const newUser = await prisma.user.create({
-            data: { name, email, password, role }
+            data: { 
+                name, 
+                email, 
+                password: hashedPassword, 
+                role: role || 'USER' // Valor por defecto
+            }
         })
 
         res.status(201).json({ success: true, data: newUser })
@@ -70,13 +85,51 @@ export const updateUser = async (req, res) => {
         if (isNaN(id)) return res.status(400).json({ error: 'Invalid user ID' })
 
         const { name, email, password, role } = req.body
+        
+        // Preparar datos para actualización
+        const updateData = {};
+        if (name) updateData.name = name;
+        if (email) updateData.email = email;
+        if (role) updateData.role = role;
+        
+        // Si hay contraseña, hacer hash
+        if (password) {
+            const salt = await bcrypt.genSalt(10);
+            updateData.password = await bcrypt.hash(password, salt);
+        }
 
         const updatedUser = await prisma.user.update({
             where: { id },
-            data: { name, email, password, role }
+            data: updateData
         })
 
         res.json({ success: true, data: updatedUser })
+    } catch (error) {
+        res.status(500).json({ error: error.message })
+    }
+}
+
+export const loginUser = async (req, res) => {
+    try {
+        const { email, password } = req.body
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Email and password are required' })
+        }
+
+        const user = await prisma.user.findUnique({ where: { email } })
+        if (!user) return res.status(401).json({ error: 'Invalid credentials' })
+
+        const validPassword = await bcrypt.compare(password, user.password)
+        if (!validPassword) return res.status(401).json({ error: 'Invalid credentials' })
+
+        // No incluir la contraseña en el token ni en la respuesta
+        const token = jwt.sign(
+            { id: user.id, email: user.email, role: user.role },
+            process.env.JWT_SECRET || 'secret',
+            { expiresIn: '1d' }
+        )
+
+        res.json({ success: true, token, user: { id: user.id, name: user.name, email: user.email, role: user.role } })
     } catch (error) {
         res.status(500).json({ error: error.message })
     }
