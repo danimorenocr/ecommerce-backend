@@ -1,4 +1,3 @@
-// src/app.js
 import express from "express"
 import cors from "cors"
 
@@ -16,7 +15,7 @@ const PORT = process.env.PORT || 4000
 // 🔹 Configuración de CORS
 const allowedOrigins = [
   "http://localhost:3000",   // frontend local
-  "http://localhost:5000",   // otro puerto local
+  "http://localhost:5173",   // otro puerto local
   "https://mi-tienda.com"    // dominio real en producción
 ]
 
@@ -35,13 +34,13 @@ app.use(cors({
 app.use(express.json())
 
 // 🔹 Rutas
-app.use("/products", productRoutes)
-app.use("/users", userRoutes)
-app.use("/carts", cartRoutes)
-app.use("/cart-items", cartItemRoutes)
-app.use("/orders", orderRoutes)
-app.use("/order-items", orderItemRoutes)
-app.use("/payments", paymentRoutes);
+app.use("/api/products", productRoutes)
+app.use("/api/users", userRoutes)
+app.use("/api/carts", cartRoutes)
+app.use("/api/cart-items", cartItemRoutes)
+app.use("/api/orders", orderRoutes)
+app.use("/api/order-items", orderItemRoutes)
+app.use("/api/payments", paymentRoutes)
 
 // Server
 app.listen(PORT, () => {
